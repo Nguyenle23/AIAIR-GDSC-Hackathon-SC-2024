@@ -1,0 +1,9 @@
+.full-chart {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin: 4rem 0;
+  padding-bottom: 10px;
+}

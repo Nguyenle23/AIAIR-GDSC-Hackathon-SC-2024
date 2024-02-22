@@ -1,0 +1,79 @@
+.header {
+  min-height: 30vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  
+}
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 10px;
+  padding-right: 10px;
+  user-select: none;
+}
+
+/* location */
+.location {
+  display: flex;
+  align-items: center;
+  margin-right: 20px;
+  color: white;
+}
+.location-icon {
+  width: 5rem;
+}
+.location-text {
+  font-size: 2.2rem;
+  font-weight: 600;
+}
+
+/* figure list */
+.figure-list {
+  width: 75vw;
+  height: 100%;
+  list-style-type: none;
+  display: flex;
+  gap: 0.5rem;
+}
+.list-item {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 20px 10px;
+  border-radius: 10px;
+  margin-right: 6px;
+  box-shadow: 1px 3px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s linear;
+}
+.list-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);
+}
+.list-item-title {
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.list-item-number {
+  display: flex;
+  align-items: end;
+  margin-right: 4px;
+  font-family: "Dosis", sans-serif;
+  font-size: 1.8rem;
+}
+.list-item-number span {
+  margin-right: 4px;
+}
+.icon {
+  width: 5rem;
+  height: 5rem;
+}
+.arrow-icon {
+  width: 3rem;
+  height: 3rem;
+}
