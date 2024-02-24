@@ -24,7 +24,7 @@ import {
   predictTempWithXGB,
 } from "../../../apis/callModelAPI";
 import { getNewestDataHCM, get100DataOfTempHCM } from "../../../apis/callAPI";
-// import { ModelResultContext } from "../../../contexts/ModelResultContext";
+// import { ModelResultContext } from "../../../contex ts/ModelResultContext";
 
 const TempChart = () => {
   const [loading, setLoading] = useState(false);
@@ -275,6 +275,7 @@ const TempChart = () => {
       case "LSTM":
         setLoading(true);
         try {
+          console.log(chartData.obj);
           await predictTempWithLSTM(chartData.obj).then((result) => {
             setCheckPredict(true);
             setPredictData({
