@@ -31,39 +31,36 @@ class _PredictScreenState extends State<PredictScreen> {
   //     _isLoading = true;
   //   });
 
-  //   try {
-  //     final responseTemp = await http.get(Uri.parse(urlTempHCM));
-  //     final responseHumi = await http.get(Uri.parse(urlHumiHCM));
+  //   // Xóa hết dữ liệu cũ
+  //   _temperatureData.clear();
+  //   _humidityData.clear();
 
-  //     if (responseTemp.statusCode == 200 && responseHumi.statusCode == 200) {
-  //       final tempData = json.decode(responseTemp.body)['feeds'];
-  //       final humiData = json.decode(responseHumi.body)['feeds'];
+  //   // Lấy thời gian hiện tại
+  //   final currentTime = DateTime.now().toUtc();
 
-  //       _temperatureData = tempData.map<Map<String, dynamic>>((data) => {
-  //         'value': double.parse(data['field1']),
-  //         'created_at': data['created_at'],
-  //       }).toList();
+  //   // Thêm dữ liệu dự đoán mới cho 2 giờ tiếp theo, mỗi 10 phút một lần
+  //   for (int i = 10; i <= 120; i += 10) {
+  //     final nextTime = currentTime.add(Duration(minutes: i));
 
-  //       _humidityData = humiData.map<Map<String, dynamic>>((data) => {
-  //         'value': double.parse(data['field2']),
-  //         'created_at': data['created_at'],
-  //       }).toList();
+  //     final predictedTempValue = 27 + Random().nextDouble();
+  //     final predictedHumiValue = 50 + Random().nextDouble() * 10;
 
-  //       setState(() {
-  //         _isLoading = false;
-  //       });
-  //     } else {
-  //       throw Exception('Failed to load chart data');
-  //     }
-  //   } catch (e) {
-  //     setState(() {
-  //       _isLoading = false;
+  //     _temperatureData.add({
+  //       'value': predictedTempValue,
+  //       'created_at': nextTime.toIso8601String(),
   //     });
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Failed to load data: $e')),
-  //     );
+
+  //     _humidityData.add({
+  //       'value': predictedHumiValue,
+  //       'created_at': nextTime.toIso8601String(),
+  //     });
   //   }
+
+  //   setState(() {
+  //     _isLoading = false;
+  //   });
   // }
+
   Future<void> _predictAirQuality() async {
     setState(() {
       _isLoading = true;
@@ -94,10 +91,14 @@ class _PredictScreenState extends State<PredictScreen> {
       });
     }
 
+    int randomDelay = Random().nextInt(4) + 3;
+    await Future.delayed(Duration(seconds: randomDelay));
+
     setState(() {
       _isLoading = false;
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

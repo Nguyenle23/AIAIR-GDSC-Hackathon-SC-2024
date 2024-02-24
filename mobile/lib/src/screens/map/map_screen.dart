@@ -66,12 +66,12 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   String _generateMarkerSnippet(Map<String, dynamic> data) {
-    String temperature = "Temperature: ${data['field1']}°C";
-    String humidity = "Humidity: ${data['field2']}%";
-    String co2 = "CO2: ${data['field3']} ppm";
-    String co = "CO: ${data['field4']} ppm";
-    String uv = "UV: ${data['field5']}";
-    String pm25 = "PM2.5: ${data['field6']} µg/m³";
+    String temperature = "Temperature: ${data['field1']}°C\n";
+    String humidity = "Humidity: ${data['field2']}%\n";
+    String co2 = "CO2: ${data['field3']} ppm\n";
+    String co = "CO: ${data['field4']} ppm\n";
+    String uv = "UV: ${data['field5']}\n";
+    String pm25 = "PM2.5: ${data['field6']} µg/m³\n";
 
     return '$temperature$humidity$co2$co$uv$pm25';
   }
