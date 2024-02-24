@@ -5,6 +5,7 @@ import 'package:iu_air_quality/src/screens/dashboard/dashboard_screen.dart';
 import 'package:iu_air_quality/src/screens/info/info_screen.dart';
 import 'package:iu_air_quality/src/screens/map/map_screen.dart';
 import 'package:iu_air_quality/src/screens/setting/setting_screen.dart';
+import 'package:iu_air_quality/src/screens/predict/predict_screen.dart'; // Import your new screen
 import 'package:iu_air_quality/src/constants/constant_color.dart';
 
 class HomePage extends StatefulWidget {
@@ -29,6 +30,7 @@ class _HomePageState extends State<HomePage> {
     MapScreen(),
     ChartScreen(),
     InfoScreen(),
+    PredictScreen(),
     SettingScreen(),
   ];
 
@@ -97,6 +99,11 @@ class _HomePageState extends State<HomePage> {
           const BottomNavigationBarItem(
             icon: Icon(Icons.info_outline_rounded),
             label: 'Information',
+          ),
+          BottomNavigationBarItem(
+            backgroundColor: _constants.tertiaryColor,
+            icon: const Icon(Icons.star_border_outlined),
+            label: 'Predict',
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.settings_outlined),
