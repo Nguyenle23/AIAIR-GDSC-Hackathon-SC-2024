@@ -1,0 +1,207 @@
+import 'package:flutter/material.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:iu_air_quality/src/constants/constant_color.dart';
+import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+class PredictScreen extends StatefulWidget {
+  const PredictScreen({Key? key}) : super(key: key);
+
+  @override
+  _PredictScreenState createState() => _PredictScreenState();
+}
+
+class _PredictScreenState extends State<PredictScreen> {
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _temperatureData = [];
+  List<Map<String, dynamic>> _humidityData = [];
+  List<DateTime> _predictedTimeData = [];
+  List<double> _predictedTempData = [];
+  List<double> _predictedHumiData = [];
+
+  String urlTempHCM = "https://api.thingspeak.com/channels/2404698/fields/1.json?timezone=Asia%2FBangkok&results=288";
+  String urlHumiHCM = "https://api.thingspeak.com/channels/2404698/fields/2.json?timezone=Asia%2FBangkok&results=288";
+  final String digitalOceanURL = "https://www.aiair-server.tech";
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Predict Air Quality'),
+      ),
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _fetchAndPredict,
+                child: const Text('Fetch Data and Predict'),
+              ),
+              const SizedBox(height: 20),
+              _isLoading
+                  ? const CircularProgressIndicator()
+                  : Column(
+                      children: [
+                        if (_predictedTempData.isNotEmpty)
+                          _buildTemperatureChart(_predictedTempData, _predictedTimeData),
+                        const SizedBox(height: 20),
+                        if (_predictedHumiData.isNotEmpty)
+                          _buildHumidityChart(_predictedHumiData, _predictedTimeData),
+                      ],
+                    ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+Future<void> _fetchAndPredict() async {
+  setState(() {
+    _isLoading = true;
+  });
+
+  try {
+    // Fetch temperature data from ThingSpeak
+    final responseTemp = await http.get(Uri.parse(urlTempHCM));
+    // Fetch humidity data from ThingSpeak
+    final responseHumi = await http.get(Uri.parse(urlHumiHCM));
+
+    if (responseTemp.statusCode == 200 && responseHumi.statusCode == 200) {
+      final tempData = json.decode(responseTemp.body)['feeds'];
+      final humiData = json.decode(responseHumi.body)['feeds'];
+
+      // Prepare data for LSTM prediction
+      List<Map<String, dynamic>> preparedTempData = tempData
+          .map<Map<String, dynamic>>((data) => {
+                'value': double.parse(data['field1']),
+                'created_at': data['created_at'],
+              })
+          .toList();
+
+      List<Map<String, dynamic>> preparedHumiData = humiData
+          .map<Map<String, dynamic>>((data) => {
+                'value': double.parse(data['field2']),
+                'created_at': data['created_at'],
+              })
+          .toList();
+
+      // Send temperature data for prediction
+      await _predictWithLSTM(preparedTempData, 'temp');
+      // Send humidity data for prediction
+      await _predictWithLSTM(preparedHumiData, 'humi');
+    } else {
+      throw Exception('Failed to load data from ThingSpeak');
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to load data: $e')),
+    );
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
+  }
+}
+
+
+Future<void> _predictWithLSTM(List<Map<String, dynamic>> data, String type) async {
+  try {
+    // Construct the URL based on the type (temperature or humidity)
+    String url = '$digitalOceanURL/predict/lstm/$type';
+
+    // Make a POST request to the Digital Ocean API with the data
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'data': data}),
+    );
+
+    // Check if the response is successful
+    if (response.statusCode == 200) {
+      // Decode the JSON response
+      final result = json.decode(response.body);
+
+      // Extract the predicted time data and series data from the response
+      List<DateTime> timeData = (result['timeData'] as List)
+          .map((time) => DateTime.parse(time))
+          .toList();
+      List<double> seriesData = (result['forecast'] as List)
+          .map<double>((value) => value.toDouble())
+          .toList();
+
+      // Update the state with the new predicted data
+      setState(() {
+        _predictedTimeData = timeData;
+        if (type == 'temp') {
+          _predictedTempData = seriesData;
+        } else if (type == 'humi') {
+          _predictedHumiData = seriesData;
+        }
+      });
+    } else {
+      throw Exception('Failed to get prediction for $type. Status code: ${response.statusCode}');
+    }
+  } catch (e) {
+    // Handle any errors that occur during the API request
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error occurred during $type prediction: $e')),
+    );
+  }
+}
+
+
+  Widget _buildTemperatureChart(List<double> tempData, List<DateTime> timeData) {
+    List<_ChartData> chartData = [];
+    for (int i = 0; i < tempData.length; i++) {
+      chartData.add(_ChartData(timeData[i], tempData[i]));
+    }
+
+    return _buildChart(chartData, 'Temperature (°C)');
+  }
+
+  Widget _buildHumidityChart(List<double> humiData, List<DateTime> timeData) {
+    List<_ChartData> chartData = [];
+    for (int i = 0; i < humiData.length; i++) {
+      chartData.add(_ChartData(timeData[i], humiData[i]));
+    }
+
+    return _buildChart(chartData, 'Humidity (%)');
+  }
+
+  Widget _buildChart(List<_ChartData> chartData, String title) {
+    final ConstantColor constantColor = ConstantColor();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: constantColor.blackColor, width: 2),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: SfCartesianChart(
+        tooltipBehavior: TooltipBehavior(enable: true),
+        title: ChartTitle(text: title),
+        legend: Legend(isVisible: false),
+        series: <ChartSeries<_ChartData, DateTime>>[
+          LineSeries<_ChartData, DateTime>(
+            dataSource: chartData,
+            xValueMapper: (_ChartData data, _) => data.time,
+            yValueMapper: (_ChartData data, _) => data.value,
+          ),
+        ],
+        primaryXAxis: DateTimeAxis(edgeLabelPlacement: EdgeLabelPlacement.shift),
+        primaryYAxis: NumericAxis(labelFormat: '{value}'),
+      ),
+    );
+  }
+}
+
+class _ChartData {
+  final DateTime time;
+  final double value;
+
+  _ChartData(this.time, this.value);
+}
